@@ -6,14 +6,18 @@ interface TokenHolding {
   }
   
   interface HistoricalPrice {
-    contract_address: string;
-    contract_name: string;
-    contract_ticker_symbol: string;
-    prices: Array<{
-      date: string;
-      price: number;
-    }>;
-  }
+    contract_metadata: {
+        contract_decimals: number;
+        contract_name: string;
+        contract_ticker_symbol: string;
+        contract_address: string;
+        supports_erc: string[];  // Adjust if needed
+        logo_url: string;
+    };
+    date: string;
+    price: number;
+    pretty_price: string;
+}
   
   interface NewsDataItem {
     id: string;

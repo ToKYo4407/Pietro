@@ -37,7 +37,7 @@ class UnifiedDataManager {
     quoteCurrency: string = 'USD'
   ): Promise<HistoricalPrice[]> {
     try {
-      const url = `https://api.covalenthq.com/v1/pricing/historical_by_addresses_v2/${chainName}/${quoteCurrency}/${tokenAddresses.join(',')}`;
+      const url = `https://api.covalenthq.com/v1/pricing/historical_by_addresses_v2/${chainName}/${quoteCurrency}/${tokenAddresses.join(',')}/`;
       const response = await axios.get(url, {
         params: {
           key: this.covalentApiKey,
@@ -45,9 +45,10 @@ class UnifiedDataManager {
           to: toDate,
         }
       });
-
+       
       const prices = response.data.data[0]?.items || [];
       this.historicalPrices.set(tokenAddresses.join('-'), prices);
+      console.log('Historical Prices:', prices);
       return prices;
     } catch (error) {
       console.error('Error fetching historical prices:', error);
@@ -130,7 +131,7 @@ async function main() {
     const toDate = '2023-12-31';
 
     await Promise.all([
-      manager.fetchAndStoreCryptoData('BTC'),
+      manager.fetchAndStoreCryptoData('USDC'),
       manager.fetchTokenHoldings(walletAddress),
       manager.fetchAndStoreABI('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48')
     ]);
