@@ -1,0 +1,45 @@
+{
+  "Response": "Success",
+  "Message": "",
+  "HasWarning": false,
+  "Type": 100,
+  "RateLimit": {},
+  "Data": {
+    "id": 1182,
+    "time": 1738800000,
+    "symbol": "BTC",
+    "partner_symbol": "BTC",
+    "inOutVar": {
+      "category": "on_chain",
+      "sentiment": "bearish",
+      "value": -0.020120248907202345,
+      "score": 0.026757641934244777,
+      "score_threshold_bearish": 0.25,
+      "score_threshold_bullish": 0.75
+    },
+    "addressesNetGrowth": {
+      "category": "on_chain",
+      "sentiment": "bearish",
+      "value": 0.001619558668054274,
+      "score": 0.2004020189842914,
+      "score_threshold_bearish": 0.25,
+      "score_threshold_bullish": 0.75
+    },
+    "concentrationVar": {
+      "category": "on_chain",
+      "sentiment": "bearish",
+      "value": -0.009635109328013149,
+      "score": 0,
+      "score_threshold_bearish": 0.25,
+      "score_threshold_bullish": 0.75
+    },
+    "largetxsVar": {
+      "category": "on_chain",
+      "sentiment": "bearish",
+      "value": 0.00023870038986063786,
+      "score": 0,
+      "score_threshold_bearish": 0.25,
+      "score_threshold_bullish": 0.75
+    }
+  }
+}
