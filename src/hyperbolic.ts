@@ -3,6 +3,7 @@ import UnifiedDataManager from './UnifiedDataManager';
 import { warn } from 'console';
 import axios from 'axios';
 import CryptoMetadataFetcher from './Metadata';
+import { symlink } from 'fs';
 
 interface RiskAnalysis {
   riskScore: number;
@@ -113,11 +114,12 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         walletAddress: string,
         fromDate: string,
         toDate: string,
-        chainName: string
+        chainName: string,
+        symbol: string 
     ): Promise<RiskAnalysis> {
         try {
             const [marketData , prices, abi] = await Promise.all([
-                this.fetchCoinMarketCapData("USDC"),
+                this.fetchCoinMarketCapData(symbol),
                 super.fetchHistoricalPrices([contractAddress], fromDate, toDate , chainName),
                 super.fetchAndStoreABI(contractAddress)
             ]);
@@ -127,7 +129,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
             const fetcher = new CryptoMetadataFetcher('d71b1825-f56f-42b8-84ca-0832f63d530e');
       
             // Fetch metadata for multiple cryptocurrencies
-            const metadata = await fetcher.getCoreMetadata(["USDC"]);
+            const metadata = await fetcher.getCoreMetadata([symbol]);
             
             // Get a formatted summary
             const summary = fetcher.formatMetadataSummary(metadata);
@@ -243,15 +245,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
     
 }
 
+export default CryptoRiskAnalyzer;
 
-
-const analyzer = new CryptoRiskAnalyzer('05d617d5bb2ae9fd145c603619749e8c6629b3f79a1a99b1f8595b7cc86ece0c',
-    'ACUZ4KME7A2WRPFPPWU2VWBXQS4AAMNQUI',
-    'cqt_rQXTQQDygJt9C3vPYTvPV7qgYR7j',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1iaGF2amFpbjE3MDk0NEBnbWFpbC5jb20iLCJpYXQiOjE3Mzg4MzQyOTF9.uqfJJdLlFrAy5ucKfmbjAM8QGCoWWW5fZzGMyfKQris');
-
-analyzer.analyzeTokenRisk('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A', '2023-01-01', '2023-12-31' , 'eth-mainnet')
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
 
     

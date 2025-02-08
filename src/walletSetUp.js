@@ -1,5 +1,7 @@
 // walletService.js
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
+import { Wallet as EthersWallet} from "ethers";
+import { Mnemonic , getBytes} from "ethers";
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -60,7 +62,7 @@ const createWallet = async () => {
 };
 
 
-const retrieveWallet = async (walletId, networkId = "eth-sepolia") => {
+const retrieveWallet = async (walletId, networkId = "eth-sepolia")  => {
   try {
     await initializeCoinbase(); // Ensure SDK is initialized
 
@@ -91,13 +93,10 @@ const retrieveWallet = async (walletId, networkId = "eth-sepolia") => {
 
     console.log("✅ Wallet loaded successfully:", wallet.getId(), address.toString());
 
+    let privateKey = address.export();
+
     return {
-      success: true,
-      data: {
-        walletId: wallet.getId(),
-        address: address.toString(),
-        walletData: parsedData[walletId],
-      }
+      privateKey,
     };
 
   } catch (error) {
@@ -111,8 +110,10 @@ const retrieveWallet = async (walletId, networkId = "eth-sepolia") => {
 
 
 
+
+
 createWallet().then((returnData) => {
   return retrieveWallet(returnData.data.walletId);
 })
 
-export { createWallet };
+export { createWallet , retrieveWallet };
