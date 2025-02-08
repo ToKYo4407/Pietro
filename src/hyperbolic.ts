@@ -112,12 +112,13 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         contractAddress: string,
         walletAddress: string,
         fromDate: string,
-        toDate: string
+        toDate: string,
+        chainName: string
     ): Promise<RiskAnalysis> {
         try {
             const [marketData , prices, abi] = await Promise.all([
                 this.fetchCoinMarketCapData("USDC"),
-                super.fetchHistoricalPrices([contractAddress], fromDate, toDate),
+                super.fetchHistoricalPrices([contractAddress], fromDate, toDate , chainName),
                 super.fetchAndStoreABI(contractAddress)
             ]);
             console.log('Market Data:', marketData.quote);
@@ -249,7 +250,7 @@ const analyzer = new CryptoRiskAnalyzer('05d617d5bb2ae9fd145c603619749e8c6629b3f
     'cqt_rQXTQQDygJt9C3vPYTvPV7qgYR7j',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1iaGF2amFpbjE3MDk0NEBnbWFpbC5jb20iLCJpYXQiOjE3Mzg4MzQyOTF9.uqfJJdLlFrAy5ucKfmbjAM8QGCoWWW5fZzGMyfKQris');
 
-analyzer.analyzeTokenRisk('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A', '2023-01-01', '2023-12-31')
+analyzer.analyzeTokenRisk('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A', '2023-01-01', '2023-12-31' , 'eth-mainnet')
     .then(result => console.log(result))
     .catch(error => console.error(error));
 

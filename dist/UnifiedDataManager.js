@@ -117,28 +117,4 @@ class UnifiedDataManager {
         return this.historicalPrices.get(tokenAddresses.join('-')) || [];
     }
 }
-// Usage example
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const manager = new UnifiedDataManager('YOUR_CRYPTO_API_KEY', 'YOUR_ETHERSCAN_API_KEY', 'YOUR_COVALENT_API_KEY');
-        try {
-            const fromDate = '2023-01-01';
-            const toDate = '2023-12-31';
-            yield Promise.all([
-                manager.fetchAndStoreCryptoData('USDC'),
-                manager.fetchHistoricalPrices(['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'], fromDate, toDate),
-                manager.fetchAndStoreABI('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48')
-            ]);
-            // const holdings = manager.getTokenHoldings(walletAddress);
-            // if (holdings.length > 0) {
-            //   const addresses = holdings.map(h => h.contract_address);
-            //   await manager.fetchHistoricalPrices(addresses, fromDate, toDate);
-            // }
-            console.log('Data fetched and stored successfully');
-        }
-        catch (error) {
-            console.error('Error in main:', error);
-        }
-    });
-}
 exports.default = UnifiedDataManager;
