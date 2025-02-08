@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import UnifiedDataManager from './UnifiedDataManager';
 import { warn } from 'console';
 import axios from 'axios';
+import CryptoMetadataFetcher from './Metadata';
 
 interface RiskAnalysis {
   riskScore: number;
@@ -122,6 +123,14 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
             console.log('Market Data:', marketData.quote);
             const metrics = this.calculateMetrics(prices);
 
+            const fetcher = new CryptoMetadataFetcher('d71b1825-f56f-42b8-84ca-0832f63d530e');
+      
+            // Fetch metadata for multiple cryptocurrencies
+            const metadata = await fetcher.getCoreMetadata(["USDC"]);
+            
+            // Get a formatted summary
+            const summary = fetcher.formatMetadataSummary(metadata);
+
             const aiResponse = await this.ai.chat.completions.create({
                 messages: [
                     {
@@ -150,7 +159,8 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
                 4. Compute a **risk score (0-100)** and categorize the risk as **High / Low**.
                 5. If you suspect data errors (e.g., incorrect liquidity values), highlight potential sources of errors (e.g., API issues or incorrect queries).
                 6. If no price anomalies are detected, no price data will be sent.
-                7. Also this is the token name ${marketData.name} and the token symbol ${marketData.symbol} , so you can use this information to help you in your analysis.`
+                7. Also this is the token name ${marketData.name} and the token symbol ${marketData.symbol} , so you can use this information to help you in your analysis.
+                8 . ${summary}`
                     },
                     {
                         role: 'user',

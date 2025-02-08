@@ -16,6 +16,7 @@ const openai_1 = __importDefault(require("openai"));
 const UnifiedDataManager_1 = __importDefault(require("./UnifiedDataManager"));
 const console_1 = require("console");
 const axios_1 = __importDefault(require("axios"));
+const Metadata_1 = __importDefault(require("./Metadata"));
 class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
     constructor(cryptoApiKey, etherscanApiKey, covalentApiKey, hyperbolicApiKey) {
         super(cryptoApiKey, etherscanApiKey, covalentApiKey);
@@ -106,6 +107,11 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
                 ]);
                 console.log('Market Data:', marketData.quote);
                 const metrics = this.calculateMetrics(prices);
+                const fetcher = new Metadata_1.default('d71b1825-f56f-42b8-84ca-0832f63d530e');
+                // Fetch metadata for multiple cryptocurrencies
+                const metadata = yield fetcher.getCoreMetadata(["USDC"]);
+                // Get a formatted summary
+                const summary = fetcher.formatMetadataSummary(metadata);
                 const aiResponse = yield this.ai.chat.completions.create({
                     messages: [
                         {
@@ -134,7 +140,8 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
                 4. Compute a **risk score (0-100)** and categorize the risk as **High / Low**.
                 5. If you suspect data errors (e.g., incorrect liquidity values), highlight potential sources of errors (e.g., API issues or incorrect queries).
                 6. If no price anomalies are detected, no price data will be sent.
-                7. Also this is the token name ${marketData.name} and the token symbol ${marketData.symbol} , so you can use this information to help you in your analysis.`
+                7. Also this is the token name ${marketData.name} and the token symbol ${marketData.symbol} , so you can use this information to help you in your analysis.
+                8 . ${summary}`
                         },
                         {
                             role: 'user',
