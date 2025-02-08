@@ -24,23 +24,20 @@ class UnifiedDataManager {
         this.tokenHoldings = new Map();
         this.historicalPrices = new Map();
     }
-    fetchTokenHoldings(walletAddress_1) {
-        return __awaiter(this, arguments, void 0, function* (walletAddress, chainName = 'eth-mainnet') {
-            try {
-                const url = `https://api.covalenthq.com/v1/${chainName}/address/${walletAddress}/balances_v2/`;
-                const response = yield axios_1.default.get(url, {
-                    params: { key: this.covalentApiKey }
-                });
-                const holdings = response.data.data.items;
-                this.tokenHoldings.set(walletAddress, holdings);
-                return holdings;
-            }
-            catch (error) {
-                console.error('Error fetching token holdings:', error);
-                return [];
-            }
-        });
-    }
+    // async fetchTokenHoldings(walletAddress: string, chainName: string = 'eth-mainnet'): Promise<TokenHolding[]> {
+    //   try {
+    //     const url = `https://api.covalenthq.com/v1/${chainName}/address/${walletAddress}/balances_v2/`;
+    //     const response = await axios.get(url, {
+    //       params: { key: this.covalentApiKey }
+    //     });
+    //     const holdings = response.data.data.items;
+    //     this.tokenHoldings.set(walletAddress, holdings);
+    //     return holdings;
+    //   } catch (error) {
+    //     console.error('Error fetching token holdings:', error);
+    //     return [];
+    //   }
+    // }
     fetchHistoricalPrices(tokenAddresses_1, fromDate_1, toDate_1) {
         return __awaiter(this, arguments, void 0, function* (tokenAddresses, fromDate, toDate, chainName = 'eth-mainnet', quoteCurrency = 'USD') {
             var _a;
@@ -55,7 +52,6 @@ class UnifiedDataManager {
                 });
                 const prices = ((_a = response.data.data[0]) === null || _a === void 0 ? void 0 : _a.items) || [];
                 this.historicalPrices.set(tokenAddresses.join('-'), prices);
-                console.log('Historical Prices:', prices);
                 return prices;
             }
             catch (error) {
@@ -126,19 +122,18 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const manager = new UnifiedDataManager('YOUR_CRYPTO_API_KEY', 'YOUR_ETHERSCAN_API_KEY', 'YOUR_COVALENT_API_KEY');
         try {
-            const walletAddress = '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A';
             const fromDate = '2023-01-01';
             const toDate = '2023-12-31';
             yield Promise.all([
                 manager.fetchAndStoreCryptoData('USDC'),
-                manager.fetchTokenHoldings(walletAddress),
+                manager.fetchHistoricalPrices(['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'], fromDate, toDate),
                 manager.fetchAndStoreABI('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48')
             ]);
-            const holdings = manager.getTokenHoldings(walletAddress);
-            if (holdings.length > 0) {
-                const addresses = holdings.map(h => h.contract_address);
-                yield manager.fetchHistoricalPrices(addresses, fromDate, toDate);
-            }
+            // const holdings = manager.getTokenHoldings(walletAddress);
+            // if (holdings.length > 0) {
+            //   const addresses = holdings.map(h => h.contract_address);
+            //   await manager.fetchHistoricalPrices(addresses, fromDate, toDate);
+            // }
             console.log('Data fetched and stored successfully');
         }
         catch (error) {

@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import UnifiedDataManager from './UnifiedDataManager';
 import { warn } from 'console';
+import axios from 'axios';
 
 interface RiskAnalysis {
   riskScore: number;
@@ -11,8 +12,6 @@ interface RiskAnalysis {
 
 interface TokenMetrics {
   priceVolatility: number;
-  liquidityDepth: number;
-  holderConcentration: number;
   tradingVolume: number;
 }
 
@@ -33,20 +32,39 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         });
     }
 
-    private calculateMetrics(historicalPrices: HistoricalPrice[], holdings: TokenHolding[]): TokenMetrics {
-        console.log('Historical prices:', historicalPrices);
+    private async fetchCoinMarketCapData(symbol: string): Promise<CoinMarketCapData> {
+        try {
+          const response = await axios.get('https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest', {
+            headers: {
+              'X-CMC_PRO_API_KEY': 'd71b1825-f56f-42b8-84ca-0832f63d530e'
+            },
+            params: {
+              symbol: symbol || 'USDC',
+              convert: 'USD'
+            }
+          });
+          console.log('CoinMarketCap response:', response.data.data.USDC[0]);
+          const tokenData = response.data.data[symbol][0];
+          console.log('Token data:', tokenData);
+          if (!tokenData) {
+            throw new Error(`No data found for symbol ${symbol}`);
+          }
+    
+          return tokenData;
+        } catch (error) {
+          console.error('Error fetching CoinMarketCap data:', error);
+          throw error;
+        }
+      }
+
+    private calculateMetrics(historicalPrices: HistoricalPrice[]): TokenMetrics {
     
         // Extract price values from historicalPrices
         const priceValues: number[] = historicalPrices.map(p => p.price);
-        console.log('Price values:', priceValues);
     
-        // Calculate total balance from holdings
-        const totalBalance = holdings.reduce((acc, h) => acc + parseFloat(h.balance), 0);
     
         return {
             priceVolatility: this.calculateVolatility(priceValues),
-            liquidityDepth: totalBalance,
-            holderConcentration: this.calculateHolderConcentration(holdings),
             tradingVolume: this.calculateAverageVolume(historicalPrices)
         };
     }
@@ -86,7 +104,6 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
     
         }
         
-        console.log('Total volume:', totalVolume);
         return (totalVolume /(1000 * 60 * 60)) /(prices.length - 1); // Normalize over total intervals
     }
 
@@ -97,46 +114,70 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         toDate: string
     ): Promise<RiskAnalysis> {
         try {
-            const [holdings, abi] = await Promise.all([
-                super.fetchTokenHoldings(walletAddress),
+            const [marketData , prices, abi] = await Promise.all([
+                this.fetchCoinMarketCapData("USDC"),
+                super.fetchHistoricalPrices([contractAddress], fromDate, toDate),
                 super.fetchAndStoreABI(contractAddress)
             ]);
-
-            const prices = await super.fetchHistoricalPrices([contractAddress], fromDate, toDate);
-            const metrics = this.calculateMetrics(prices, holdings);
+            console.log('Market Data:', marketData.quote);
+            const metrics = this.calculateMetrics(prices);
 
             const aiResponse = await this.ai.chat.completions.create({
                 messages: [
                     {
                         role: 'system',
-                        content: `You are an expert in finding risky tokens. Analyze the provided metrics and return a risk score (0-100) and detailed findings.
-                        The cryptocurrency ecosystem, while innovative and revolutionary, has unfortunately become a breeding ground for sophisticated scams targeting both novice and experienced investors. Among the most prevalent are honeypot token scams, where malicious smart contracts allow buying but prevent selling through hidden code manipulations. These scams often feature heavy social media promotion and apparent price increases, luring investors into a trap where they cannot withdraw their funds. The scammers eventually drain the liquidity pool, leaving investors with worthless tokens.
-
-                        Rug pulls represent another common threat, occurring when project developers abandon their project and abscond with investor funds. These can manifest as soft rugs, where developers gradually sell their tokens over time, or hard rugs, where they suddenly remove all liquidity. Warning signs include anonymous team members, short liquidity lock periods, and suspicious token distribution patterns where large percentages are held by single wallets.
-                    
-                        Pump and dump schemes involve coordinated groups artificially inflating token prices through misleading marketing and synchronized buying. These groups typically accumulate tokens quietly at low prices, launch aggressive promotional campaigns to create FOMO (Fear of Missing Out), and then dump their holdings once prices have risen significantly. The resulting price crash leaves later investors bearing substantial losses.
-                    
-                        Front-running attacks represent a more technical form of exploitation, where attackers monitor the mempool for pending transactions and submit their own transactions with higher gas fees to profit from price movements. This can be particularly damaging in decentralized exchanges where transparency can be exploited. Protection measures include using DEXs with anti-front-running features and setting appropriate slippage tolerances.
-                    
-                        Social engineering scams persist through various tactics, including fake customer support interactions, project impersonation, fraudulent airdrops, and sophisticated phishing attempts. Scammers often create convincing copies of legitimate platforms or pose as helpful community members to gain access to users' private keys or seed phrases. Protection requires constant vigilance, verification of all platform URLs, and a healthy skepticism toward unsolicited offers or assistance. You will get price of tokens over time and also the contract abi of the token , You need to analyze and to give a risk score and mention whether it is high or low risk.
-                        Also please analyze the data if u find that some data is unusual like liquidity is too high while like trading volume is almost zero do try to correct it this may be due to problems in the ccode i wrote or the server i quered may be prone to nugs and error. Also try to find out the whitepaper to red more about that token. Price data will be sent to you only if there are any anomalies in the data if you receive no data hence no anomalies are there in price.
-                        Whitepaper needs to be found out by you and also the contract address of the token is given to you. So try to find out` 
+                        content: `You are an expert in identifying risky tokens. Analyze the provided metrics and return a risk score (0-100) along with detailed findings.
+                
+                The cryptocurrency ecosystem, while innovative, has become a hotspot for scams targeting both novice and experienced investors. Some of the most common fraudulent tactics include:
+                
+                - **Honeypot Scams:** Malicious smart contracts allow users to buy tokens but prevent selling. These scams often feature aggressive social media promotion and artificial price inflation to lure investors before preventing withdrawals.
+                  
+                - **Rug Pulls:** Developers abandon a project and steal investor funds. This can occur as:
+                  - **Soft Rug:** Developers gradually sell their holdings over time.
+                  - **Hard Rug:** Liquidity is suddenly removed, crashing the token price.
+                  - Red flags include anonymous teams, short liquidity lock periods, and concentrated token distribution among a few wallets.
+                
+                - **Pump and Dump Schemes:** Coordinated groups artificially inflate token prices through misleading marketing and synchronized buying. Once prices peak, they sell, causing a rapid price drop.
+                
+                - **Front-Running Attacks:** Attackers monitor pending transactions in the mempool and use higher gas fees to execute profitable trades before others. This is especially common in decentralized exchanges (DEXs). 
+                
+                - **Social Engineering Scams:** Scammers use fake customer support, project impersonation, fraudulent airdrops, and phishing attempts to steal private keys or funds.
+                
+                ### **Your Analysis Task**
+                1. Evaluate the provided token data, including contract ABI, price history, and liquidity metrics.
+                2. Identify anomalies (e.g., extremely high liquidity with zero trading volume).
+                3. Assess the token’s whitepaper for credibility. If unavailable, attempt to locate it online.
+                4. Compute a **risk score (0-100)** and categorize the risk as **High / Low**.
+                5. If you suspect data errors (e.g., incorrect liquidity values), highlight potential sources of errors (e.g., API issues or incorrect queries).
+                6. If no price anomalies are detected, no price data will be sent.
+                7. Also this is the token name ${marketData.name} and the token symbol ${marketData.symbol} , so you can use this information to help you in your analysis.`
                     },
                     {
                         role: 'user',
                         content: `Analyze token metrics:
-                            Contract: ${contractAddress}
-                            Volatility: ${metrics.priceVolatility}
-                            Liquidity: ${metrics.liquidityDepth}
-                            Volume: ${metrics.tradingVolume}
-                            ABI: ${JSON.stringify(abi)}
-                            Prices: ${JSON.stringify(this.detectAnomalies(prices))}
-                            `
+                Contract: ${contractAddress}
+                Volatility: ${metrics.priceVolatility}
+                24h Volume: ${marketData.quote.USD.volume_24h}
+                Market Cap: ${marketData.quote.USD.market_cap}
+                Market Cap Dominance: ${marketData.quote.USD.market_cap_dominance}
+                
+                Price Change:
+                - 1 Hour: ${marketData.quote.USD.percent_change_1h}%
+                - 24 Hours: ${marketData.quote.USD.percent_change_24h}%
+                - 7 Days: ${marketData.quote.USD.percent_change_7d}%
+                
+                Supply:
+                - Circulating: ${marketData.circulating_supply}
+                - Total: ${marketData.total_supply}
+                - Max: ${marketData.max_supply}
+                
+                ABI: ${JSON.stringify(abi)}
+                Detected Price Anomalies: ${JSON.stringify(this.detectAnomalies(prices))}
+                `
                     }
                 ],
                 model: 'meta-llama/Meta-Llama-3-70B-Instruct'
-            });
-             
+            });                
             console.log('AI Response:', aiResponse);
             const analysis = aiResponse.choices[0].message.content || '';
             const riskScore = this.extractRiskScore(analysis);

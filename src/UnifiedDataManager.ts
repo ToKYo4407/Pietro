@@ -13,21 +13,21 @@ class UnifiedDataManager {
     private covalentApiKey: string,
   ) {}
 
-  async fetchTokenHoldings(walletAddress: string, chainName: string = 'eth-mainnet'): Promise<TokenHolding[]> {
-    try {
-      const url = `https://api.covalenthq.com/v1/${chainName}/address/${walletAddress}/balances_v2/`;
-      const response = await axios.get(url, {
-        params: { key: this.covalentApiKey }
-      });
+  // async fetchTokenHoldings(walletAddress: string, chainName: string = 'eth-mainnet'): Promise<TokenHolding[]> {
+  //   try {
+  //     const url = `https://api.covalenthq.com/v1/${chainName}/address/${walletAddress}/balances_v2/`;
+  //     const response = await axios.get(url, {
+  //       params: { key: this.covalentApiKey }
+  //     });
 
-      const holdings = response.data.data.items;
-      this.tokenHoldings.set(walletAddress, holdings);
-      return holdings;
-    } catch (error) {
-      console.error('Error fetching token holdings:', error);
-      return [];
-    }
-  }
+  //     const holdings = response.data.data.items;
+  //     this.tokenHoldings.set(walletAddress, holdings);
+  //     return holdings;
+  //   } catch (error) {
+  //     console.error('Error fetching token holdings:', error);
+  //     return [];
+  //   }
+  // }
 
   async fetchHistoricalPrices(
     tokenAddresses: string[],
@@ -48,7 +48,6 @@ class UnifiedDataManager {
        
       const prices = response.data.data[0]?.items || [];
       this.historicalPrices.set(tokenAddresses.join('-'), prices);
-      console.log('Historical Prices:', prices);
       return prices;
     } catch (error) {
       console.error('Error fetching historical prices:', error);
@@ -126,21 +125,20 @@ async function main() {
   );
 
   try {
-    const walletAddress = '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A';
     const fromDate = '2023-01-01';
     const toDate = '2023-12-31';
 
     await Promise.all([
       manager.fetchAndStoreCryptoData('USDC'),
-      manager.fetchTokenHoldings(walletAddress),
+      manager.fetchHistoricalPrices(['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'], fromDate, toDate),
       manager.fetchAndStoreABI('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48')
     ]);
 
-    const holdings = manager.getTokenHoldings(walletAddress);
-    if (holdings.length > 0) {
-      const addresses = holdings.map(h => h.contract_address);
-      await manager.fetchHistoricalPrices(addresses, fromDate, toDate);
-    }
+    // const holdings = manager.getTokenHoldings(walletAddress);
+    // if (holdings.length > 0) {
+    //   const addresses = holdings.map(h => h.contract_address);
+    //   await manager.fetchHistoricalPrices(addresses, fromDate, toDate);
+    // }
 
     console.log('Data fetched and stored successfully');
   } catch (error) {
