@@ -38,9 +38,9 @@ class UnifiedDataManager {
     //     return [];
     //   }
     // }
-    fetchHistoricalPrices(tokenAddresses_1, fromDate_1, toDate_1) {
-        return __awaiter(this, arguments, void 0, function* (tokenAddresses, fromDate, toDate, chainName = 'eth-mainnet', quoteCurrency = 'USD') {
-            var _a;
+    fetchHistoricalPrices(tokenAddresses, fromDate, toDate, chainName = 'eth-mainnet', quoteCurrency = 'USD') {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
             try {
                 const url = `https://api.covalenthq.com/v1/pricing/historical_by_addresses_v2/${chainName}/${quoteCurrency}/${tokenAddresses.join(',')}/`;
                 const response = yield axios_1.default.get(url, {
