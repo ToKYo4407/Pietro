@@ -81,6 +81,7 @@ const userAddress = wallet.address;
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const balance = await token.balanceOf(await wallet.getAddress());
   console.log(`💰 Balance: ${ethers.formatUnits(balance, 18)} tokens`);
+  return balance;
 }
 
 async function checkEthBalance() {
@@ -148,3 +149,5 @@ async function main() {
 }
 
 main();
+
+export { swapTokens, checkBalance, transferTokens, checkEthBalance, handleTransaction };
