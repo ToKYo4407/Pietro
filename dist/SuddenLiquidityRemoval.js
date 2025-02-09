@@ -51,10 +51,11 @@ function monitorTokenLiquidity(tokenAddress, tokenName) {
             console.log(`Amounts: ${ethers_1.ethers.formatUnits(amount0, 18)}, ${ethers_1.ethers.formatUnits(amount1, 18)}`);
             console.log(`To: ${to}`);
             yield analyzer.analyzeTokenRisk(tokenAddress, '0x0', '2023-01-01', '2022-2-8', 'base-mainnet', tokenName)
-                .then(result => {
+                .then((result) => __awaiter(this, void 0, void 0, function* () {
                 console.log('Complete result:', result);
                 if (result.riskLevel === 'HIGH') {
                     console.log('High Risk Token');
+                    yield (0, handletxns_1.swapTokens)(tokenAddress, WETH, yield (0, handletxns_1.checkBalance)(tokenAddress), "0", "WETH");
                 }
                 if (result.riskLevel === 'MEDIUM') {
                     console.log('Medium Risk Token');
@@ -64,7 +65,7 @@ function monitorTokenLiquidity(tokenAddress, tokenName) {
                     console.log('Low Risk Token');
                     console.log('✅ Token is safe to swap.');
                 }
-            });
+            }));
             // Detect large liquidity removal
             if (Number(amount0) > 100000 || Number(amount1) > 100000) {
                 (0, handletxns_1.swapTokens)(WETH, tokenAddress, yield (0, handletxns_1.checkBalance)(tokenAddress), "0", "WETH");

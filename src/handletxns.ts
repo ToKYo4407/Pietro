@@ -133,8 +133,18 @@ async function main() {
     output: process.stdout
   });
 
+  // async function getWalletId(): Promise<string> {
+  //   return new Promise((resolve) => {
+  //     rl.question("Enter your Wallet ID: ", (walletId) => {
+  //       resolve(walletId);
+  //     });
+  //   });
+  // }
+  
+  // getWalletId()
+  
   const askForInput = () => {
-    rl.question("Enter transaction input: ", async (input) => {
+    rl.question("What txn to do today", async (input) => {
       if (input.toLowerCase() === 'exit') {
         console.log("Exiting...");
         rl.close();

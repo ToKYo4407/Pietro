@@ -137,8 +137,16 @@ function main() {
             input: process.stdin,
             output: process.stdout
         });
+        // async function getWalletId(): Promise<string> {
+        //   return new Promise((resolve) => {
+        //     rl.question("Enter your Wallet ID: ", (walletId) => {
+        //       resolve(walletId);
+        //     });
+        //   });
+        // }
+        // getWalletId()
         const askForInput = () => {
-            rl.question("Enter transaction input: ", (input) => __awaiter(this, void 0, void 0, function* () {
+            rl.question("What txn to do today", (input) => __awaiter(this, void 0, void 0, function* () {
                 if (input.toLowerCase() === 'exit') {
                     console.log("Exiting...");
                     rl.close();
