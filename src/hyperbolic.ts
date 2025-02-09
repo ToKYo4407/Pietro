@@ -3,7 +3,6 @@ import UnifiedDataManager from './UnifiedDataManager';
 import { warn } from 'console';
 import axios from 'axios';
 import CryptoMetadataFetcher from './Metadata';
-import { symlink } from 'fs';
 
 interface RiskAnalysis {
   riskScore: number;
@@ -25,7 +24,8 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         cryptoApiKey: string,
         etherscanApiKey: string,
         covalentApiKey: string,
-        hyperbolicApiKey: string
+        hyperbolicApiKey: string,
+
     ) {
         super(cryptoApiKey, etherscanApiKey, covalentApiKey);
         this.ai = new OpenAI({
@@ -45,9 +45,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
               convert: 'USD'
             }
           });
-          console.log('CoinMarketCap response:', response.data.data.USDC[0]);
           const tokenData = response.data.data[symbol][0];
-          console.log('Token data:', tokenData);
           if (!tokenData) {
             throw new Error(`No data found for symbol ${symbol}`);
           }
@@ -115,21 +113,20 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         fromDate: string,
         toDate: string,
         chainName: string,
-        symbol: string 
+        tokenName: string
     ): Promise<RiskAnalysis> {
         try {
             const [marketData , prices, abi] = await Promise.all([
-                this.fetchCoinMarketCapData(symbol),
+                this.fetchCoinMarketCapData(tokenName),
                 super.fetchHistoricalPrices([contractAddress], fromDate, toDate , chainName),
                 super.fetchAndStoreABI(contractAddress)
             ]);
-            console.log('Market Data:', marketData.quote);
             const metrics = this.calculateMetrics(prices);
 
             const fetcher = new CryptoMetadataFetcher('d71b1825-f56f-42b8-84ca-0832f63d530e');
       
             // Fetch metadata for multiple cryptocurrencies
-            const metadata = await fetcher.getCoreMetadata([symbol]);
+            const metadata = await fetcher.getCoreMetadata([tokenName]);
             
             // Get a formatted summary
             const summary = fetcher.formatMetadataSummary(metadata);
@@ -242,10 +239,6 @@ class CryptoRiskAnalyzer extends UnifiedDataManager {
         return zScores;
     }
     
-    
 }
 
 export default CryptoRiskAnalyzer;
-
-
-    

@@ -20,9 +20,6 @@ fVEtNJYEZVuA2lmKkhfXgWjtwA54dHqdXQ==
   });
 };
 
-
-
-
 // Create wallet function
 const createWallet = async () => {
   try {
@@ -93,7 +90,7 @@ const retrieveWallet = async (walletId, networkId = "eth-sepolia")  => {
 
     console.log("✅ Wallet loaded successfully:", wallet.getId(), address.toString());
 
-    let privateKey = address.export();
+    let privateKey = address.export().privateKey;
 
     return {
       privateKey,
@@ -109,11 +106,4 @@ const retrieveWallet = async (walletId, networkId = "eth-sepolia")  => {
 };
 
 
-
-
-
-createWallet().then((returnData) => {
-  return retrieveWallet(returnData.data.walletId);
-})
-
-export { createWallet , retrieveWallet };
+export default retrieveWallet;
