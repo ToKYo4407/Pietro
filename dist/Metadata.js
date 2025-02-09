@@ -44,9 +44,9 @@ class CryptoMetadataFetcher {
             }
         });
     }
-    getCoreMetadata(identifiers_1) {
-        return __awaiter(this, arguments, void 0, function* (identifiers, idType = 'symbol') {
-            var _a;
+    getCoreMetadata(identifiers, idType = 'symbol') {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
             const identifierArray = Array.isArray(identifiers) ? identifiers : [identifiers];
             const metadata = {};
             for (const identifier of identifierArray) {

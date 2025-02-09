@@ -93,7 +93,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
         }
         return (totalVolume / (1000 * 60 * 60)) / (prices.length - 1); // Normalize over total intervals
     }
-    analyzeTokenRisk(contractAddress, walletAddress, fromDate, toDate, chainName) {
+    analyzeTokenRisk(contractAddress, walletAddress, fromDate, toDate, chainName, tokenName) {
         const _super = Object.create(null, {
             fetchHistoricalPrices: { get: () => super.fetchHistoricalPrices },
             fetchAndStoreABI: { get: () => super.fetchAndStoreABI }
@@ -101,7 +101,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const [marketData, prices, abi] = yield Promise.all([
-                    this.fetchCoinMarketCapData("USDC"),
+                    this.fetchCoinMarketCapData(tokenName),
                     _super.fetchHistoricalPrices.call(this, [contractAddress], fromDate, toDate, chainName),
                     _super.fetchAndStoreABI.call(this, contractAddress)
                 ]);
@@ -109,7 +109,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
                 const metrics = this.calculateMetrics(prices);
                 const fetcher = new Metadata_1.default('d71b1825-f56f-42b8-84ca-0832f63d530e');
                 // Fetch metadata for multiple cryptocurrencies
-                const metadata = yield fetcher.getCoreMetadata(["USDC"]);
+                const metadata = yield fetcher.getCoreMetadata([tokenName]);
                 // Get a formatted summary
                 const summary = fetcher.formatMetadataSummary(metadata);
                 const aiResponse = yield this.ai.chat.completions.create({
@@ -216,7 +216,4 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
         return zScores;
     }
 }
-const analyzer = new CryptoRiskAnalyzer('05d617d5bb2ae9fd145c603619749e8c6629b3f79a1a99b1f8595b7cc86ece0c', 'ACUZ4KME7A2WRPFPPWU2VWBXQS4AAMNQUI', 'cqt_rQXTQQDygJt9C3vPYTvPV7qgYR7j', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1iaGF2amFpbjE3MDk0NEBnbWFpbC5jb20iLCJpYXQiOjE3Mzg4MzQyOTF9.uqfJJdLlFrAy5ucKfmbjAM8QGCoWWW5fZzGMyfKQris');
-analyzer.analyzeTokenRisk('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '0xcDC5a5e232EEdC690128ADB5ca9c840C9F94c68A', '2023-01-01', '2023-12-31', 'eth-mainnet')
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
+exports.default = CryptoRiskAnalyzer;

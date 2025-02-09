@@ -1,0 +1,9 @@
+{
+  "97d8b144-fbe6-4fdf-9664-1836ae5698c5": {
+    "seed": "e245e44fa1d8af03316003057cfaf623aa0b045513a2382a68774d74a2f40409",
+    "encrypted": false,
+    "authTag": "",
+    "iv": "",
+    "networkId": "base-sepolia"
+  }
+}

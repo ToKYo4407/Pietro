@@ -1,5 +1,7 @@
 import { error } from "console";
 import { ethers, Contract } from "ethers";
+import CryptoRiskAnalyzer from "./hyperbolic";
+import  {swapTokens , checkBalance} from "./handletxns"; 
 
 const ALCHEMY_WEBSOCKET_URL = "wss://eth-mainnet.g.alchemy.com/v2/Yy4JFDLUVE5oFwyhI8LAKMokkVwDJFsw";
 const provider = new ethers.WebSocketProvider(ALCHEMY_WEBSOCKET_URL);
@@ -29,7 +31,15 @@ async function getPairAddress(tokenAddress: string): Promise<string | null> {
 }
 
 // Function to monitor liquidity removal events
-async function monitorTokenLiquidity(tokenAddress: string): Promise<void> {
+async function monitorTokenLiquidity(tokenAddress: string , tokenName: string): Promise<void> {
+    const analyzer = new CryptoRiskAnalyzer(
+        '05d617d5bb2ae9fd145c603619749e8c6629b3f79a1a99b1f8595b7cc86ece0c',
+        'ACUZ4KME7A2WRPFPPWU2VWBXQS4AAMNQUI',
+        'cqt_rQXTQQDygJt9C3vPYTvPV7qgYR7j',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1iaGF2amFpbjE3MDk0NEBnbWFpbC5jb20iLCJpYXQiOjE3Mzg4MzQyOTF9.uqfJJdLlFrAy5ucKfmbjAM8QGCoWWW5fZzGMyfKQris'
+    );
+    
+
     const pairAddress = await getPairAddress(tokenAddress);
     if (!pairAddress) return;
 
@@ -41,14 +51,40 @@ async function monitorTokenLiquidity(tokenAddress: string): Promise<void> {
         console.log(`Amounts: ${ethers.formatUnits(amount0, 18)}, ${ethers.formatUnits(amount1, 18)}`);
         console.log(`To: ${to}`);
 
+
+    await analyzer.analyzeTokenRisk(
+            tokenAddress ,
+            '0x0',
+            '2023-01-01',
+            '2022-2-8',
+            'base-mainnet',
+            tokenName
+          )
+            .then(result => {
+              console.log('Complete result:', result);
+              if (result.riskLevel === 'HIGH') {
+                console.log('High Risk Token');
+                 
+              }
+              if (result.riskLevel === 'MEDIUM') {
+                console.log('Medium Risk Token');
+               console.warn('⚠️ Medium risk token detected. Proceed with caution. Press ctrl + c to cancel.');
+              }
+              if (result.riskLevel === 'LOW') {
+                console.log('Low Risk Token');
+                console.log('✅ Token is safe to swap.');
+              }
+            })
+
         // Detect large liquidity removal
         if (Number(amount0) > 100_000 || Number(amount1) > 100_000) {
-            console.error("🚨 Possible rug pull detected!");
+            swapTokens(WETH , tokenAddress , await checkBalance(tokenAddress)  , "0" , "WETH");
+
         }
     });
 }
 
 const TOKEN_TO_MONITOR = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";  
-monitorTokenLiquidity(TOKEN_TO_MONITOR);
+monitorTokenLiquidity(TOKEN_TO_MONITOR , "USDC"); 
 
 export default monitorTokenLiquidity;
