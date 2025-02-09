@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config(); // Load API key from .env file
 
 const openai = new OpenAI({
-  apiKey: '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', // Use environment variable for security
+  apiKey: process.env.OPEN_AI_KEY, // Use environment variable for security
 });
 
 export async function parseTransaction(input: string) {
