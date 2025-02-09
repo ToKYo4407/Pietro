@@ -38,9 +38,7 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
                         convert: 'USD'
                     }
                 });
-                console.log('CoinMarketCap response:', response.data.data.USDC[0]);
                 const tokenData = response.data.data[symbol][0];
-                console.log('Token data:', tokenData);
                 if (!tokenData) {
                     throw new Error(`No data found for symbol ${symbol}`);
                 }
@@ -105,7 +103,6 @@ class CryptoRiskAnalyzer extends UnifiedDataManager_1.default {
                     _super.fetchHistoricalPrices.call(this, [contractAddress], fromDate, toDate, chainName),
                     _super.fetchAndStoreABI.call(this, contractAddress)
                 ]);
-                console.log('Market Data:', marketData.quote);
                 const metrics = this.calculateMetrics(prices);
                 const fetcher = new Metadata_1.default('d71b1825-f56f-42b8-84ca-0832f63d530e');
                 // Fetch metadata for multiple cryptocurrencies

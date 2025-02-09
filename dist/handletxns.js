@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.handleTransaction = exports.checkEthBalance = exports.transferTokens = exports.checkBalance = exports.swapTokens = void 0;
 const ethers_1 = require("ethers");
 const dotenv_1 = __importDefault(require("dotenv"));
 const interpreter_1 = __importDefault(require("./interpreter"));
@@ -19,6 +20,7 @@ const { retrieveWallet } = require("./walletSetUp");
 const hyperbolic_1 = __importDefault(require("./hyperbolic"));
 const console_1 = require("console");
 const readline_1 = __importDefault(require("readline"));
+const SuddenLiquidityRemoval_1 = __importDefault(require("./SuddenLiquidityRemoval"));
 dotenv_1.default.config(); // Load environment variables
 const BASE_SEPOLIA_RPC = "https://base-sepolia.g.alchemy.com/v2/Yy4JFDLUVE5oFwyhI8LAKMokkVwDJFsw";
 const UNISWAP_V2_ROUTER = "0x6977e417aEA71dd1554298030c85D1AD8C37374B"; // Uniswap V2 Router on Base Sepolia
@@ -67,31 +69,40 @@ function swapTokens(tokenIn, tokenOut, amountIn, minAmountOut, tokenOutName) {
         console.log(`✅ Swap successful! Tx Hash: ${tx.hash}`);
     });
 }
+exports.swapTokens = swapTokens;
 // Check Token Balance
 function checkBalance(tokenAddress) {
     return __awaiter(this, void 0, void 0, function* () {
-        const privateKey = retrieveWallet();
-        const wallet = new ethers_1.ethers.Wallet(privateKey, provider);
+        const privateKey = yield retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+        const wallet = new ethers_1.ethers.Wallet(privateKey.privateKey, provider);
         const userAddress = wallet.address;
         const token = new ethers_1.ethers.Contract(tokenAddress, ERC20_ABI, provider);
         const balance = yield token.balanceOf(yield wallet.getAddress());
         console.log(`💰 Balance: ${ethers_1.ethers.formatUnits(balance, 18)} tokens`);
+        return balance;
     });
 }
+exports.checkBalance = checkBalance;
 function checkEthBalance() {
     return __awaiter(this, void 0, void 0, function* () {
-        const privateKey = retrieveWallet();
-        const wallet = new ethers_1.ethers.Wallet(privateKey, provider);
+        const privateKey = yield retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+        const wallet = new ethers_1.ethers.Wallet(privateKey.privateKey, provider);
         const userAddress = wallet.address;
-        const balance = yield provider.getBalance(userAddress);
-        console.log(`💰 Balance: ${ethers_1.ethers.formatUnits(balance, 18)} ETH`);
+        try {
+            const balance = yield provider.getBalance(userAddress);
+            console.log(`💰 Balance: ${ethers_1.ethers.formatUnits(balance, 18)} ETH`);
+        }
+        catch (error) {
+            console.error("Error fetching ETH balance:", error);
+        }
     });
 }
+exports.checkEthBalance = checkEthBalance;
 // Transfer ERC20 Tokens
 function transferTokens(tokenAddress, recipient, amount) {
     return __awaiter(this, void 0, void 0, function* () {
-        const privateKey = retrieveWallet();
-        const wallet = new ethers_1.ethers.Wallet(privateKey, provider);
+        const privateKey = yield retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+        const wallet = new ethers_1.ethers.Wallet(privateKey.privateKey, provider);
         const userAddress = wallet.address;
         const token = new ethers_1.ethers.Contract(tokenAddress, ERC20_ABI, wallet);
         const tx = yield token.transfer(recipient, amount);
@@ -99,6 +110,7 @@ function transferTokens(tokenAddress, recipient, amount) {
         console.log(`✅ Transfer successful! Tx Hash: ${tx.hash}`);
     });
 }
+exports.transferTokens = transferTokens;
 // Handle Transactions Based on AI Output
 function handleTransaction(parsed) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -111,11 +123,14 @@ function handleTransaction(parsed) {
                 return transferTokens(parsed.token, parsed.recipient, parsed.amount);
             case "ethbalance":
                 return checkEthBalance();
+            case "monitor":
+                return (0, SuddenLiquidityRemoval_1.default)(parsed.token, parsed.tokenName);
             default:
                 console.log("❌ Unknown action:", parsed.action);
         }
     });
 }
+exports.handleTransaction = handleTransaction;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const rl = readline_1.default.createInterface({

@@ -17,7 +17,7 @@ const openai_1 = require("openai");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config(); // Load API key from .env file
 const openai = new openai_1.OpenAI({
-    apiKey: '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', // Use environment variable for security
+    apiKey: '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', // Use environment variable for security
 });
 function parseTransaction(input) {
     var _a;
@@ -45,6 +45,9 @@ function parseTransaction(input) {
         
         - "Check ETH balance in my wallet "
           → {"action": "ethbalance""}
+
+        - "Monitor liquidity of 0xUSDCContract"
+          → {"action": "monitor", "token": "0xUSDCContract"}  
         `,
                 },
                 {
