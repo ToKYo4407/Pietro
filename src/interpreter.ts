@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config(); // Load API key from .env file
 
 const openai = new OpenAI({
-  apiKey: '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', // Use environment variable for security
+  apiKey: process.env.OPEN_AI_KEY, // Use environment variable for security
 });
 
 export async function parseTransaction(input: string) {
@@ -31,6 +31,9 @@ export async function parseTransaction(input: string) {
         
         - "Check ETH balance in my wallet "
           → {"action": "ethbalance""}
+
+        - "Monitor liquidity of 0xUSDCContract"
+          → {"action": "monitor", "token": "0xUSDCContract"}  
         `,
       },
       {

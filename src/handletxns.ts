@@ -5,6 +5,7 @@ const { retrieveWallet } = require("./walletSetUp");
 import CryptoRiskAnalyzer  from "./hyperbolic";
 import { warn } from "console";
 import readline from 'readline';
+import monitorTokenLiquidity  from "./SuddenLiquidityRemoval";
 
 dotenv.config(); // Load environment variables
 
@@ -75,8 +76,8 @@ async function swapTokens(tokenIn: string, tokenOut: string, amountIn: string, m
 
 // Check Token Balance
 async function checkBalance(tokenAddress: string) {
-  const privateKey = retrieveWallet();
-const wallet = new ethers.Wallet(privateKey, provider);
+  const privateKey = await retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+const wallet = new ethers.Wallet(privateKey.privateKey, provider);
 const userAddress = wallet.address;
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
   const balance = await token.balanceOf(await wallet.getAddress());
@@ -85,17 +86,21 @@ const userAddress = wallet.address;
 }
 
 async function checkEthBalance() {
-  const privateKey = retrieveWallet();
-const wallet = new ethers.Wallet(privateKey, provider);
+  const privateKey = await retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+const wallet = new ethers.Wallet(privateKey.privateKey, provider);
 const userAddress = wallet.address;
+try {
   const balance = await provider.getBalance(userAddress);
   console.log(`💰 Balance: ${ethers.formatUnits(balance, 18)} ETH`);
+} catch (error) {
+  console.error("Error fetching ETH balance:", error);
+}
 }
 
 // Transfer ERC20 Tokens
 async function transferTokens(tokenAddress: string, recipient: string, amount: string) {
-  const privateKey = retrieveWallet();
-const wallet = new ethers.Wallet(privateKey, provider);
+  const privateKey = await retrieveWallet("97d8b144-fbe6-4fdf-9664-1836ae5698c5");
+const wallet = new ethers.Wallet(privateKey.privateKey, provider);
 const userAddress = wallet.address;
   const token = new ethers.Contract(tokenAddress, ERC20_ABI, wallet);
   const tx = await token.transfer(recipient, amount);
@@ -114,6 +119,8 @@ async function handleTransaction(parsed: any) {
       return transferTokens(parsed.token, parsed.recipient, parsed.amount);
     case "ethbalance":
       return checkEthBalance();  
+    case "monitor":
+      return monitorTokenLiquidity(parsed.token, parsed.tokenName);
     default:
       console.log("❌ Unknown action:", parsed.action);
   }
@@ -126,8 +133,18 @@ async function main() {
     output: process.stdout
   });
 
+  // async function getWalletId(): Promise<string> {
+  //   return new Promise((resolve) => {
+  //     rl.question("Enter your Wallet ID: ", (walletId) => {
+  //       resolve(walletId);
+  //     });
+  //   });
+  // }
+  
+  // getWalletId()
+  
   const askForInput = () => {
-    rl.question("Enter transaction input: ", async (input) => {
+    rl.question("What txn to do today", async (input) => {
       if (input.toLowerCase() === 'exit') {
         console.log("Exiting...");
         rl.close();
